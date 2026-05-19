@@ -1,194 +1,166 @@
 async function onLoad() {
-  console.log("onLoad");
-
-  // recuper informazioni dalla chiamata
   const urlParams = new URLSearchParams(window.location.search);
   const clientId = urlParams.get("client_id");
-  const clientSecret = urlParams.get("client_secret");
   const deviceName = decodeURIComponent(urlParams.get("device_name"));
   const showDevice = urlParams.get("show_devices");
 
-  // salvataggio in local storage
   localStorage.setItem("client_id", clientId);
-  localStorage.setItem("client_secret", clientSecret);
   localStorage.setItem("device_name", deviceName);
   localStorage.setItem("show_devices", showDevice);
 
-  //genero chiamata REst per AUTH
-  const redirectUri = window.location.protocol + "//" + window.location.host + window.location.pathname + "callback.html";
+  const codeVerifier = generateRandomString(64);
+  const codeChallenge = base64encode(await sha256(codeVerifier));
+  const state = generateRandomString(16);
 
+  localStorage.setItem("code_verifier", codeVerifier);
+  localStorage.setItem("oauth_state", state);
+
+  const baseUrl = window.location.protocol + "//" + window.location.host + window.location.pathname.replace(/[^/]*$/, "");
+  const redirectUri = baseUrl + "callback.html";
   const scope = "user-read-private user-read-email user-read-playback-state user-modify-playback-state";
   const authUrl = new URL("https://accounts.spotify.com/authorize");
 
-  const params = {
+  authUrl.search = new URLSearchParams({
     response_type: "code",
     client_id: clientId,
     scope,
     redirect_uri: redirectUri,
-    state: "e^LrT&P)(52ep57x"
-  };
+    state,
+    code_challenge_method: "S256",
+    code_challenge: codeChallenge
+  }).toString();
 
-  authUrl.search = new URLSearchParams(params).toString();
   window.location.href = authUrl.toString();
 }
 
 async function onCallback() {
-  console.log("onCallback");
-
-  // recupero il code generato da URL
   const urlParams = new URLSearchParams(window.location.search);
-  let code = urlParams.get("code");
+  const code = urlParams.get("code");
+  const state = urlParams.get("state");
 
-  // salvo il codice in local storage
-  localStorage.setItem("code", code);
+  if (state !== localStorage.getItem("oauth_state")) {
+    showError();
+    return;
+  }
 
-  // recupero i dati da local storage
-  var clientId = localStorage.getItem("client_id");
-  var clientSecret = localStorage.getItem("client_secret");
+  const clientId = localStorage.getItem("client_id");
+  const codeVerifier = localStorage.getItem("code_verifier");
+  const redirectUri = window.location.protocol + "//" + window.location.host + window.location.pathname;
 
-  // genero la Basic per Autenticazione
-  var authb64 = "Basic " + btoa(clientId + ':' + clientSecret);
-
-  var redirectUri = window.location.protocol + "//" + window.location.host + window.location.pathname;
-
-  // avvio la chiamata per il token
-  const url = new URL("https://accounts.spotify.com/api/token");
-
-  const payload = {
+  const body = await fetch("https://accounts.spotify.com/api/token", {
     method: "POST",
-    headers: {
-      "content-type": "application/x-www-form-urlencoded",
-      "Authorization": authb64
-    },
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
-      "grant_type" : "authorization_code",
-      "code" : code,
-      "redirect_uri": redirectUri,
-    }),
-  };
+      grant_type: "authorization_code",
+      code,
+      redirect_uri: redirectUri,
+      client_id: clientId,
+      code_verifier: codeVerifier
+    })
+  });
 
-  const body = await fetch(url, payload);
   const response = await body.json();
 
-  // salvo i token in local storage
+  if (!response.access_token) {
+    showError();
+    return;
+  }
+
   localStorage.setItem("access_token", response.access_token);
   localStorage.setItem("refresh_token", response.refresh_token);
 
   getDevices();
-
 }
 
-async function getDevices(){
-  console.log("getDevices");
+async function getDevices() {
+  const accessToken = localStorage.getItem("access_token");
+  const deviceName = localStorage.getItem("device_name");
+  const showDevice = localStorage.getItem("show_devices");
 
-  // recupero access token da local content
-  var accessToken = localStorage.getItem("access_token");
-  var deviceName = localStorage.getItem("device_name");
-  var showDevice = localStorage.getItem("show_devices");
-  var auth = "Bearer " + accessToken;
-  
-  // avvio recuper dei dispositivi
-  const url = new URL("https://api.spotify.com/v1/me/player/devices");
-  const payload = {
+  const body = await fetch("https://api.spotify.com/v1/me/player/devices", {
     method: "GET",
-    headers: {
-      "Authorization": auth
-    }
-  };
-
-  const body = await fetch(url, payload);
+    headers: { "Authorization": "Bearer " + accessToken }
+  });
   const response = await body.json();
-  const devices = await response.devices;
-  if(devices == undefined){
-    document.getElementById("img-loader").style.display = "none";
-    document.getElementById("img-error").style.display = "block";
-    document.getElementById("text-status").innerHTML = "ERROR";
+  const devices = response.devices;
+
+  if (!devices) {
+    showError();
     return;
   }
-    
-  if (showDevice == "true"){
-    var string = "";
-    devices.forEach(device => {
-      string = string + '<li class="device">' + device.name + '</li>'
-    });
+
+  if (showDevice === "true") {
     document.getElementById("box-status").style.display = "none";
     document.getElementById("box-devices").style.display = "flex";
-    document.getElementById("devices").innerHTML = string;
-  }else{
-    
-  var deviceID = devices.map(dev => dev.name == deviceName ? dev.id : null ).filter(id => id != null)[0];
-  localStorage.setItem("device_id", deviceID);
-  setNewDevice();
-
+    const container = document.getElementById("devices");
+    container.innerHTML = "";
+    devices.forEach(d => {
+      const btn = document.createElement("button");
+      btn.className = "device";
+      btn.textContent = d.name;
+      btn.onclick = () => selectDevice(d.id);
+      container.appendChild(btn);
+    });
+  } else {
+    const deviceID = devices.find(d => d.name === deviceName)?.id;
+    if (!deviceID) {
+      showError();
+      return;
+    }
+    localStorage.setItem("device_id", deviceID);
+    setNewDevice();
   }
-
 }
 
-async function setNewDevice(){
-  console.log("setNewDevice");
+function selectDevice(deviceId) {
+  localStorage.setItem("device_id", deviceId);
+  document.getElementById("box-devices").style.display = "none";
+  document.getElementById("box-status").style.display = "flex";
+  setNewDevice();
+}
 
-  // recupero access token da local content
-  var accessToken = localStorage.getItem("access_token");
-  var deviceID = localStorage.getItem("device_id");
-  var auth = "Bearer " + accessToken;
+async function setNewDevice() {
+  const accessToken = localStorage.getItem("access_token");
+  const deviceID = localStorage.getItem("device_id");
 
-  const url = new URL("https://api.spotify.com/v1/me/player");
-
-  // controllo status playback
-  // var payload = {
-  //   method: "GET",
-  //   headers: {
-  //     "Authorization": auth,    
-  //   }
-  // };
-
-  // const body = await fetch(url, payload);
-  // console.log("response: ", body.json())
-  // // if(!body.response){
-  // //   document.getElementById("img-loader").style.display = "none";
-  // //   document.getElementById("img-error").style.display = "block";
-  // //   document.getElementById("text-status").innerHTML = "ERROR";
-  // //   return;
-  // // }
-  // var response = await body.json();  
-  
-  // avvio switch del dispositivo
-  payload = {
+  const response = await fetch("https://api.spotify.com/v1/me/player", {
     method: "PUT",
     headers: {
-      "Authorization": auth,
-      "Content-Type" : "application/json"
+      "Authorization": "Bearer " + accessToken,
+      "Content-Type": "application/json"
     },
-    body: JSON.stringify({
-      "device_ids": [deviceID]
-    })
-  };
-  response = await fetch(url, payload);
-  if (response.ok){
+    body: JSON.stringify({ device_ids: [deviceID] })
+  });
+
+  if (response.ok) {
     document.getElementById("img-loader").style.display = "none";
     document.getElementById("img-done").style.display = "block";
-    document.getElementById("text-status").innerHTML = "Conneted";
-  }else{
-    document.getElementById("img-loader").style.display = "none";
-    document.getElementById("img-error").style.display = "block";
-    document.getElementById("text-status").innerHTML = "ERROR";
+    document.getElementById("text-status").innerHTML = "Connected";
+  } else {
+    showError();
   }
+}
+
+function showError() {
+  document.getElementById("img-loader").style.display = "none";
+  document.getElementById("img-error").style.display = "block";
+  document.getElementById("text-status").innerHTML = "ERROR";
 }
 
 function sha256(plain) {
   const encoder = new TextEncoder();
-  const data = encoder.encode(plain);
-  return window.crypto.subtle.digest("SHA-256", data);
+  return window.crypto.subtle.digest("SHA-256", encoder.encode(plain));
 }
+
 function base64encode(input) {
   return btoa(String.fromCharCode(...new Uint8Array(input)))
     .replace(/=/g, "")
     .replace(/\+/g, "-")
     .replace(/\//g, "_");
 }
+
 function generateRandomString(length) {
-  const possible =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   const values = crypto.getRandomValues(new Uint8Array(length));
   return values.reduce((acc, x) => acc + possible[x % possible.length], "");
 }

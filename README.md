@@ -5,7 +5,7 @@
 A web tool that bridges Amazon Alexa and Spotify: it performs the Spotify OAuth 2.0 authorization flow and transfers playback to a target device, enabling Alexa skills to hand off music control to Spotify on a specific device.
 
 ### How it works
-1. Alexa (or any caller) opens the page passing `client_id`, `client_secret`, `device_name`, and optionally `show_devices` as query parameters.
+1. Alexa (or any caller) opens the page passing `client_id`, `device_name`, and optionally `show_devices` as query parameters.
 2. The page redirects the user to Spotify's authorization endpoint.
 3. After the user grants access, Spotify redirects to `callback.html` with an authorization code.
 4. The app exchanges the code for an access token and transfers playback to the specified device.
@@ -28,9 +28,8 @@ Pass the following query parameters when loading `index.html`:
 | Parameter | Description |
 |---|---|
 | `client_id` | Spotify app Client ID |
-| `client_secret` | Spotify app Client Secret |
 | `device_name` | Target Spotify device name |
-| `show_devices` | (optional) `1` to list available devices |
+| `show_devices` | (optional) `true` to list available devices |
 
 ---
 
@@ -39,7 +38,7 @@ Pass the following query parameters when loading `index.html`:
 Uno strumento web che collega Amazon Alexa e Spotify: esegue il flusso di autorizzazione OAuth 2.0 di Spotify e trasferisce la riproduzione su un dispositivo di destinazione, permettendo alle Alexa Skill di delegare il controllo della musica a Spotify su un dispositivo specifico.
 
 ### Come funziona
-1. Alexa (o qualsiasi chiamante) apre la pagina passando `client_id`, `client_secret`, `device_name` e opzionalmente `show_devices` come parametri query.
+1. Alexa (o qualsiasi chiamante) apre la pagina passando `client_id`, `device_name` e opzionalmente `show_devices` come parametri query.
 2. La pagina reindirizza l'utente all'endpoint di autorizzazione di Spotify.
 3. Dopo che l'utente concede l'accesso, Spotify reindirizza a `callback.html` con un codice di autorizzazione.
 4. L'app scambia il codice per un access token e trasferisce la riproduzione al dispositivo specificato.
@@ -62,10 +61,9 @@ Passa i seguenti parametri query al caricamento di `index.html`:
 | Parametro | Descrizione |
 |---|---|
 | `client_id` | Client ID dell'app Spotify |
-| `client_secret` | Client Secret dell'app Spotify |
 | `device_name` | Nome del dispositivo Spotify di destinazione |
-| `show_devices` | (opzionale) `1` per elencare i dispositivi disponibili |
+| `show_devices` | (opzionale) `true` per elencare i dispositivi disponibili |
 
 ---
-
+localhost:5500/index.html/client_id=85b5d4a5b0fe48eea33cc5f70687a576&show_devices=true
 *Author: Giovanni Romeo*
