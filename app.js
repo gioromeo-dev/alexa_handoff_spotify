@@ -37,6 +37,13 @@ async function onCallback() {
   const urlParams = new URLSearchParams(window.location.search);
   const code = urlParams.get("code");
   const state = urlParams.get("state");
+  const error = urlParams.get("error");
+
+  // Spotify returned an auth error (e.g. user denied) or code is missing
+  if (error || !code) {
+    showError();
+    return;
+  }
 
   if (state !== localStorage.getItem("oauth_state")) {
     showError();
@@ -45,6 +52,15 @@ async function onCallback() {
 
   const clientId = localStorage.getItem("client_id");
   const codeVerifier = localStorage.getItem("code_verifier");
+
+  if (!clientId || !codeVerifier) {
+    showError();
+    return;
+  }
+
+  // Remove code from URL immediately to prevent invalid_grant on page refresh
+  history.replaceState({}, "", window.location.pathname);
+
   const redirectUri = window.location.protocol + "//" + window.location.host + window.location.pathname;
 
   const body = await fetch("https://accounts.spotify.com/api/token", {
