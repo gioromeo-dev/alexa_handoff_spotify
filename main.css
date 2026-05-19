@@ -1,129 +1,210 @@
-body{
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
     background-color: #121212;
     color: white;
 }
-div{
-    border-radius: 16px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;   
-}
-path{
+
+path {
     fill: #1DB954;
 }
-.logo{
-    width: 85px;
-    height: 25px;
-}
-.header{
-    margin-top: 20px;
-    margin-bottom: 20px;
-    flex-direction: row !important;
-    width: 100%;
-}
-.body{
-    padding: 20px;
-    height: fit-content;
-    background-color: #212121;
-    flex-direction: column;
-    justify-content: end;
-    
-}
-.box{
-    width: 85px;
-    height: 25px;
-    background-color: #212121;
-    border-radius: 50px;
-}
-.content{
-    color: black;
-    background-color: #f7f9f8;
-    padding: 10%;
-    border-radius: 50px;
-    min-height: fit-content;
-    gap: 0px;
+
+/* ── Header ── */
+.header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 16px 20px;
+    flex-shrink: 0;
 }
 
-#status{
-    flex-direction: row;
+.logo {
+    width: 85px;
+    height: 25px;
 }
-#img-phone{
-    width: 70vw;
-    aspect-ratio: 1/1,7;
+
+.box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 16px;
+    background-color: #212121;
+    border-radius: 50px;
+    font-size: 14px;
 }
-#img-loader{
-    display: block;
-    width: 10vw;
+
+/* ── Body ── */
+.body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 16px;
+    background-color: #212121;
 }
-#img-done{
-    display: none;
-    height: 5vh;
-}
-#img-error{
-    display: none;
-    height: 5vh;
-}
-.text{
-    padding-top: 0px;
-    padding-bottom: 0px;
-    gap: 0px;
-    text-align: center;
-    height: fit-content;
-}
-.text-title{
-    font-size: x-large;
-    font-weight: bold;
-    margin-block-start: 5px;
-    margin-block-end: 5px;
-}
-.text-body{
-    font-size: medium;
-    margin-block-start: 5px;
-    margin-block-end: 5px;
-}
-#box-devices{
-    display: none;
-    width: 90%;
-    justify-content: start;
-    margin-top: 20px;
-    gap: 0px;
-}
-#devices{
+
+/* ── Content card ── */
+.content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     width: 100%;
-    align-items: stretch;
-    gap: 0px;
+    max-width: 480px;
+    max-height: 100%;
+    padding: 24px;
+    gap: 16px;
+    border-radius: 32px;
+    overflow: hidden;
+    background-color: #f7f9f8;
+    color: #121212;
+}
+
+/* ── Text ── */
+.text {
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.text-title {
+    font-size: clamp(15px, 4.5vw, 21px);
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.text-body {
+    font-size: clamp(12px, 3.5vw, 14px);
+}
+
+/* ── Status (callback.html) ── */
+#box-status {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    gap: 12px;
+}
+
+#status {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+#img-loader {
+    display: block;
+    width: 28px;
+    height: 28px;
+}
+
+#img-done {
+    display: none;
+    width: 28px;
+    height: 28px;
+}
+
+#img-error {
+    display: none;
+    width: 28px;
+    height: 28px;
+}
+
+/* ── Phone image ── */
+/* In #box-status (callback.html): fills remaining flex height */
+#box-status #img-phone {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    object-fit: contain;
+    object-position: center;
+}
+
+/* In #img-box (index.html): natural proportions, constrained to parent */
+#img-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+}
+
+#img-box #img-phone {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+/* ── Devices (callback.html) ── */
+#box-devices {
+    display: none;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+#devices {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
     border-radius: 16px;
     overflow: hidden;
     border: 1px solid #d0d0d0;
 }
-.device{
+
+.device {
     width: 100%;
     padding: 14px 18px;
     background: #f7f9f8;
     border: none;
     border-bottom: 1px solid #d0d0d0;
     text-align: left;
-    font-size: medium;
+    font-size: 15px;
     font-family: inherit;
     font-weight: 500;
     color: #121212;
     cursor: pointer;
-    border-radius: 0;
     transition: background-color 0.15s;
 }
-.device:last-child{
+
+.device:last-child {
     border-bottom: none;
 }
-.device:hover{
+
+.device:hover {
     background-color: #e8ebe9;
 }
-.device:active{
+
+.device:active {
     background-color: #1DB954;
     color: white;
 }
-#box-status{
-    display: flex;
+
+/* ── Desktop ── */
+@media (min-width: 600px) {
+    .content {
+        padding: 40px 48px;
+    }
 }
