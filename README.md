@@ -65,5 +65,5 @@ Passa i seguenti parametri query al caricamento di `index.html`:
 | `show_devices` | (opzionale) `true` per elencare i dispositivi disponibili |
 
 ---
-localhost:5500/index.html/client_id=85b5d4a5b0fe48eea33cc5f70687a576&show_devices=true
+
 *Author: Giovanni Romeo*
