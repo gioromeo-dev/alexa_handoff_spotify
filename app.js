@@ -106,21 +106,11 @@ async function getDevices() {
   }
 
   if (showDevice === "true") {
-    document.getElementById("box-status").style.display = "none";
-    document.getElementById("box-devices").style.display = "flex";
-    const container = document.getElementById("devices");
-    container.innerHTML = "";
-    devices.forEach(d => {
-      const btn = document.createElement("button");
-      btn.className = "device";
-      btn.textContent = d.name;
-      btn.onclick = () => selectDevice(d.id);
-      container.appendChild(btn);
-    });
+    showDeviceList(devices);
   } else {
     const deviceID = devices.find(d => d.name === deviceName)?.id;
     if (!deviceID) {
-      showError();
+      showDeviceList(devices);
       return;
     }
     localStorage.setItem("device_id", deviceID);
@@ -128,10 +118,24 @@ async function getDevices() {
   }
 }
 
+function showDeviceList(devices) {
+  document.getElementById("status").style.display = "none";
+  document.getElementById("box-devices").style.display = "flex";
+  const container = document.getElementById("devices");
+  container.innerHTML = "";
+  devices.forEach(d => {
+    const btn = document.createElement("button");
+    btn.className = "device";
+    btn.textContent = d.name;
+    btn.onclick = () => selectDevice(d.id);
+    container.appendChild(btn);
+  });
+}
+
 function selectDevice(deviceId) {
   localStorage.setItem("device_id", deviceId);
   document.getElementById("box-devices").style.display = "none";
-  document.getElementById("box-status").style.display = "flex";
+  document.getElementById("status").style.display = "flex";
   setNewDevice();
 }
 
